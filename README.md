@@ -5,3 +5,6 @@ Workflow:
 
 Run main.py to run the server.
 Use the simple UI of index.html to send queries to the agent
+
+
+Please create your .env file and populate it with Groq and Tavily API key secrets.
