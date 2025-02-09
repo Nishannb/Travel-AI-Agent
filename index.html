@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Planner Assistant</title>
+    <style>
+        :root {
+            --primary-color: #2196F3;
+            --secondary-color: #E3F2FD;
+            --text-color: #333;
+            --light-gray: #f5f5f5;
+            --border-radius: 12px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background-color: #f0f2f5;
+            color: var(--text-color);
+            padding: 20px;
+        }
+
+        .chat-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .chat-header h2 {
+            font-size: 24px;
+            font-weight: 500;
+        }
+
+        .chat-messages {
+            padding: 20px;
+            height: 500px;
+            overflow-y: auto;
+            background-color: white;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            max-width: 85%;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .user-message {
+            background-color: var(--primary-color);
+            color: white;
+            margin-left: auto;
+            box-shadow: var(--box-shadow);
+        }
+
+        .bot-message {
+            background-color: var(--light-gray);
+            margin-right: auto;
+            box-shadow: var(--box-shadow);
+        }
+
+        .initial-plan {
+            background-color: var(--secondary-color);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .plan-step {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .final-details {
+            background-color: white;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 8px;
+            box-shadow: var(--box-shadow);
+        }
+
+        .input-container {
+            display: flex;
+            padding: 20px;
+            background-color: var(--light-gray);
+            border-top: 1px solid #ddd;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            margin-right: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .send-button {
+            padding: 12px 24px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        .send-button:hover {
+            background-color: #1976D2;
+        }
+
+        .send-button:disabled {
+            background-color: #90CAF9;
+            cursor: not-allowed;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h2>✈️ Travel Planner Assistant</h2>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot-message">
+                👋 Hello! I'm your travel planning assistant. Tell me about your travel plans and budget, and I'll help you organize your trip.
+            </div>
+        </div>
+        <div class="input-container">
+            <input type="text" class="chat-input" id="userInput" 
+                   placeholder="Tell me about your travel plans..." 
+                   onkeypress="if(event.key === 'Enter') sendMessage()">
+            <button class="send-button" id="sendButton" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/plan-trip';
+        const chatMessages = document.getElementById('chatMessages');
+        const userInput = document.getElementById('userInput');
+        const sendButton = document.getElementById('sendButton');
+
+        function addMessage(message, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+            messageDiv.textContent = message;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function displayInitialPlan(plan) {
+            const planDiv = document.createElement('div');
+            planDiv.className = 'initial-plan';
+            
+            const planTitle = document.createElement('h3');
+            planTitle.textContent = '🎯 Initial Travel Plan';
+            planTitle.style.marginBottom = '15px';
+            planDiv.appendChild(planTitle);
+
+            plan.forEach((step, index) => {
+                const stepDiv = document.createElement('div');
+                stepDiv.className = 'plan-step';
+                stepDiv.textContent = `${index + 1}. ${step}`;
+                planDiv.appendChild(stepDiv);
+            });
+
+            chatMessages.appendChild(planDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function displayFinalDetails(details) {
+            const detailsDiv = document.createElement('div');
+            detailsDiv.className = 'final-details';
+            
+            const detailsTitle = document.createElement('h3');
+            detailsTitle.textContent = '✨ Final Travel Plan Details';
+            detailsTitle.style.marginBottom = '15px';
+            detailsDiv.appendChild(detailsTitle);
+
+            details.forEach((detail, index) => {
+                const detailPara = document.createElement('p');
+                detailPara.style.marginBottom = '15px';
+                detailPara.textContent = detail;
+                detailsDiv.appendChild(detailPara);
+            });
+
+            chatMessages.appendChild(detailsDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            userInput.disabled = true;
+            sendButton.disabled = true;
+            addMessage(message, true);
+            userInput.value = '';
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query: message })
+                });
+
+                const data = await response.json();
+                
+                if (data.type === 'plan') {
+                    console.log(data)
+                    displayInitialPlan(data.content);
+                } else if (data.type === 'final') {
+                    console.log(data)
+                    displayFinalDetails(data.content);
+                } else if (data.type === 'error') {
+                    addMessage('Sorry, I encountered an error: ' + data.message);
+                }
+            } catch (error) {
+                addMessage('Sorry, there was an error connecting to the travel planner. Please try again later.');
+                console.error('Error:', error);
+            }
+
+            userInput.disabled = false;
+            sendButton.disabled = false;
+            userInput.focus();
+        }
+    </script>
+</body>
+</html>
